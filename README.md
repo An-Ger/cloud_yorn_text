@@ -15,3 +15,20 @@ npm install wait-on --save-dev
      "dev": "concurrently \"wait-on http://localhost:3000 && electron .\"  \" cross-env BROWSER=none  npm start\" "
 
 使用flex进行弹性盒布局
+useRef返回一个对象，其中current属性保存变量的值
+
+使用Svg而不是font icon，使用reactfontawesome
+npm i --save @fortawesome/fontawesome-svg-core
+npm i --save @fortawesome/free-solid-svg-icons
+npm i --save @fortawesome/react-fontawesome
+
+使用PropTypes进行类型检查
+FileSearch.propTypes = {
+  title: PropTypes.string,
+  onFileSearch: PropTypes.func.isRequired
+}
+
+npm i --save @fortawesome/free-brands-svg-icons
+
+files.map(file => (file.title))
+files.map(file {return(file.title)})
