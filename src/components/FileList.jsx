@@ -8,42 +8,53 @@ import {
 } from "@fortawesome/free-solid-svg-icons";
 // import  faMarkdown from "@fortawesome/free-brands-svg-icons";
 import PropTypes from "prop-types";
-import useKeyPress from '../hooks/useKeyPress'
+import useKeyPress from "../hooks/useKeyPress";
 const FileList = ({ files, onFileClick, onSaveEdit, onFileDelete }) => {
   const [editStatus, setEditStatus] = useState(false);
   const [value, setValue] = useState("");
-  const enterPressed = useKeyPress(13)
-  const escPressed = useKeyPress(27)
-  const closeSearch = () => {
-    setEditStatus(false)
-    setValue('')
-  }
+  const enterPressed = useKeyPress(13);
+  const escPressed = useKeyPress(27);
+  const closeSearch = (editItem) => {
+    setEditStatus(false);
+    setValue("");
+    if(editItem.isNew) {
+      onFileDelete(editItem.id)
+    }
+  };
   useEffect(() => {
-    if(enterPressed && editStatus) {
-      const editItem = files.find(file => file.id === editStatus)
-      onSaveEdit(editItem.id, value)
-      setEditStatus(false)
-      setValue('')
+    const newFile = files.find(file => file.isNew)
+    console.log(newFile);
+    if(newFile) {
+      setEditStatus(newFile.id)
+      setValue(newFile.title)
     }
-    if(escPressed && editStatus) {
-      closeSearch()
+  }, [files])
+  useEffect(() => {
+    const editItem = files.find((file) => file.id === editStatus);
+    if (enterPressed && editStatus && value.trim() !== "") {
+      onSaveEdit(editItem.id, value);
+      setEditStatus(false);
+      setValue("");
     }
-  })
+    if (escPressed && editStatus) {
+      closeSearch(editItem);
+    }
+  });
   return (
     <ul className="list-group list-group-flush file-list">
       {files.map((file) => {
         return (
           <li
-            className="list-group-item bg-light d-flex align-items-center file-item"
+            className="list-group-item bg-light d-flex align-items-center file-item mx-0"
             key={file.id}
           >
-            {file.id !== editStatus && (
+            {(file.id !== editStatus) && !file.isNew && (
               <>
                 <span>
                   <FontAwesomeIcon icon={faTasks} size="lg" title="MD" />
                 </span>
                 <span
-                  className="col-8 c-link"
+                  className="col-6 c-link"
                   onClick={() => {
                     onFileClick(file.id);
                   }}
@@ -52,7 +63,7 @@ const FileList = ({ files, onFileClick, onSaveEdit, onFileDelete }) => {
                 </span>
                 <button
                   type="button"
-                  className="icon-button col-1"
+                  className="icon-button col-2"
                   onClick={() => {
                     setEditStatus(file.id);
                     setValue(file.title);
@@ -62,7 +73,7 @@ const FileList = ({ files, onFileClick, onSaveEdit, onFileDelete }) => {
                 </button>
                 <button
                   type="button"
-                  className="icon-button col-1"
+                  className="icon-button col-2"
                   onClick={() => {
                     onFileDelete(file.id);
                   }}
@@ -71,7 +82,7 @@ const FileList = ({ files, onFileClick, onSaveEdit, onFileDelete }) => {
                 </button>
               </>
             )}
-            {file.id === editStatus && (
+            {(file.id === editStatus || file.isNew) && (
               <>
                 <input
                   className="form-control col-10"
@@ -79,13 +90,14 @@ const FileList = ({ files, onFileClick, onSaveEdit, onFileDelete }) => {
                   onChange={(e) => {
                     setValue(e.target.value);
                   }}
+                  placeholder="输入名称"
                 />
                 <button
                   type="button"
                   className="icon-buttton col-2"
-                  onClick={closeSearch}
+                  onClick={() => {closeSearch(file)}}
                 >
-                  <FontAwesomeIcon 
+                  <FontAwesomeIcon
                     icon={faTimes}
                     size="lg"
                     color="red"

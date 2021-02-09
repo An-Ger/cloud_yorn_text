@@ -12,6 +12,7 @@ const FileSearch = ({ title, onFileSearch }) => {
   const closeSearch = () => {
     setInputActive(false);
     setValue("");
+    onFileSearch('')
   };
   useEffect(() => {
     if(enterPressed && inputActive) {
@@ -39,7 +40,7 @@ const FileSearch = ({ title, onFileSearch }) => {
     }
   }, [inputActive]);
   return (
-    <div className="alert alert-primary d-flex justify-content-between align-items-center">
+    <div className="alert alert-primary d-flex justify-content-between align-items-center mb-0">
       {!inputActive && (
         <>
           <span>{title}</span>

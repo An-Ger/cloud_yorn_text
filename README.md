@@ -32,3 +32,9 @@ npm i --save @fortawesome/free-brands-svg-icons
 
 files.map(file => (file.title))
 files.map(file {return(file.title)})
+圆括号直接返回，是省略掉return的写法
+
+使用npm install node-sass --save支持sass预处理器
+npm install classnames --save
+npm install --save react-simplemde-editor React适配的SimpleMDE
+npm install --save uuid 生成独一无二的id码
