@@ -13,11 +13,13 @@ import uuidv4 from "uuid";
 import {flattenArr, objToArr} from './utils/helper'
 function App() {
   const [files, setFiles] = useState(flattenArr(defaultFiles));
+  console.log(files)
   const [activeFileID, setActiveFileID] = useState("");
   const [openedFileIDs, setOpenedFiledIDs] = useState([]);
   const [unsavedFileIDs, setUnsavedFileIDs] = useState([]);
   const [searchedFiles, setSearchedFiles] = useState([]);
   const filesArr = objToArr(files)
+  console.log(filesArr)
   const openedFiles = openedFileIDs.map((openID) => {
     return files[openID]
   });
@@ -63,7 +65,7 @@ function App() {
     setSearchedFiles(newFiles);
   }; 
   const createNewFile = () => {
-    const newID = new uuidv4();
+    const newID = uuidv4();
     const newFile = {
         id: newID,
         title: "",
@@ -113,7 +115,6 @@ function App() {
                 activeId={activeFileID}
                 unsaveIds={unsavedFileIDs}
                 onTabClick={tabClick}
-                activeId={activeFileID}
                 onCloseTab={tabClose}
               />
               <SimpleMDE
