@@ -38,3 +38,5 @@ files.map(file {return(file.title)})
 npm install classnames --save
 npm install --save react-simplemde-editor React适配的SimpleMDE
 npm install --save uuid 生成独一无二的id码
+
+npm install electron-store
