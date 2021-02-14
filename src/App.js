@@ -13,14 +13,12 @@ import TabList from "./components/TabList";
 import SimpleMDE from "react-simplemde-editor";
 import "easymde/dist/easymde.min.css";
 import uuidv4 from "uuid";
-import { objToArr } from "./utils/helper";
+import { flattenArr, objToArr } from "./utils/helper";
 import fileHelper from "./utils/fileHelper";
-// const fs = window.require('fs')
-// console.dir(fs)
-const { join } = window.require("path");
-const  {remote}  = window.require("electron")
+const { join, basename, extname, dirname } = window.require("path");
+const { remote } = window.require("electron");
 const Store = window.require("electron-store");
-const fileStore = new Store({'name': 'AppData'});
+const fileStore = new Store({ name: "AppData" });
 const saveFilesToStore = (files) => {
   const filesStoreObj = objToArr(files).reduce((result, file) => {
     const { id, path, title, createdAt } = file;
@@ -80,22 +78,22 @@ function App() {
     }
   };
   const deleteFile = (id) => {
-    if(files[id].isNew) {
-      delete files[id];
-      setFiles(files);
+    console.log(...files);
+    if (files[id].isNew) {
+      const { [id]: value, ...afterDelete } = files;
+      setFiles({ afterDelete });
+    } else {
+      fileHelper.deleteFile(files[id].path).then(() => {
+        const { [id]: value, ...afterDelete } = files;
+        setFiles({ afterDelete });
+        saveFilesToStore(afterDelete);
+        //close the tab if open
+        tabClose(id);
+      });
     }
-    else {
-    fileHelper.deleteFile(files[id].path).then(() => {
-      delete files[id];
-      setFiles(files);
-      saveFilesToStore(files);
-      //close the tab if open
-      tabClose(id);
-    });
-  }
   };
   const updateFileName = (id, title, isNew) => {
-    const newPath = join(savedLocation, `${title}.md`);
+    const newPath = isNew ? join(savedLocation, `${title}.md`) : join(dirname(files[id].path), `${title}.md`)
     const modifiedFile = { ...files[id], title, isNew: false, path: newPath };
     const newFiles = { ...files, [id]: modifiedFile };
     if (isNew) {
@@ -104,7 +102,7 @@ function App() {
         saveFilesToStore(newFiles);
       });
     } else {
-      const oldPath = join(savedLocation, `${files[id].title}.md`);
+      const oldPath = files[id].path;
       fileHelper.renameFile(oldPath, newPath).then(() => {
         setFiles(newFiles);
         saveFilesToStore(newFiles);
@@ -126,12 +124,55 @@ function App() {
     };
     setFiles({ ...files, [newID]: newFile });
   };
+
   const saveCurrentFile = () => {
-    fileHelper
-      .wirteFile(join(savedLocation, `${activeFile.title}.md`), activeFile.body)
-      .then(() => {
-        setUnsavedFileIDs(unsavedFileIDs.filter((id) => id !== activeFile.id));
-      });
+    const fs = window.require("fs").promises;
+    const { path, body } = activeFile;
+    fs.writeFile(path, body, { encoding: "utf8" }).then(() => {
+      setUnsavedFileIDs(unsavedFileIDs.filter((id) => id !== activeFile.id));
+    });
+  };
+  const importFiles = () => {
+    remote.dialog
+      .showOpenDialog({
+        title: "Choose the MarkDown",
+        properties: ["openFile", "multiSelections"],
+        filters: [{ name: "MarkDown files", extensions: ["md"] }],
+      })
+      .then(
+        (resolve) => {
+          if (Array.isArray(resolve.filePaths)) {
+            //filter out the path already
+            const filteredPaths = resolve.filePaths.filter((path) => {
+              const alreadyAdded = Object.values(files).find((file) => {
+                return file.path === path;
+              });
+              return !alreadyAdded;
+            });
+            const importFilesArr = filteredPaths.map((path) => {
+              return {
+                id: uuidv4(),
+                title: basename(path, extname(path)),
+                path,
+              };
+            });
+
+            const newFiles = { ...files, ...flattenArr(importFilesArr) };
+            setFiles(newFiles);
+            saveFilesToStore(newFiles);
+            if (importFilesArr.length > 0) {
+              remote.dialog.showMessageBox({
+                type: "info",
+                title: `Import ${importFilesArr.length}Success`,
+                message: `Import ${importFilesArr.length} MarkDown Success`,
+              });
+            }
+          }
+        },
+        (reason) => {
+          console.log(reason);
+        }
+      );
   };
   return (
     <div className="App" container-fluid px-0>
@@ -158,6 +199,7 @@ function App() {
                 text="导入"
                 colorClass="btn-success"
                 icon={faFileImport}
+                onBtnClick={importFiles}
               />
             </div>
           </div>
